@@ -1,0 +1,656 @@
+
+\documentclass[11pt]{article}
+\usepackage[spanish]{babel} % espanol
+
+\usepackage{graphicx} % graficos
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{float}  
+\usepackage[table]{xcolor}
+
+
+\begin{document}
+
+	\begin{titlepage}
+
+		\begin{center}
+			\vspace*{-1in}
+			\begin{figure}[htb]
+			\begin{center}
+			\includegraphics[width=8cm]{usm}
+			\end{center}
+			\end{figure}
+
+			DEPARTAMENTO DE INFORMATICA\\
+			\vspace*{0.15in}
+			REDES DE COMPUTADORES\\
+			\vspace*{0.6in}
+			\begin{large}
+			TAREA 3\\
+			\end{large}
+			\vspace*{0.2in}
+			\begin{Large}
+
+			\end{Large}
+			\vspace*{0.3in}
+			\begin{large}
+			Informe $Open$ $Visual$ $Traceroute$ y ruteo de p\'aginas
+			\end{large}
+			\vspace*{0.3in}
+			\rule{80mm}{0.1mm}\\
+			\vspace*{0.1in}
+			\begin{large}
+			 {\bfseries Integrantes:} \\ 
+			Nicol\'as Curapil \\ Joaqu\'{i}n Olgu\'in \\ Iv\'an Torres
+			\end{large}
+			\end{center}
+
+	\end{titlepage}
+
+
+
+
+		\section{Introducci\'on}
+En este informe, se mostrar\'a el an\'alisis de distintas p\'aginas o dominios de internet propuestas en la tarea, mostrando el recorrido que esta realiza desde su origen, hasta nuestro computador, utilizando el programa \textit{Open Visual Traceroute}. Posteriormente, se explicar\'a porque sucede este redireccionamiento y c\'omo funciona.\\
+
+	Es importante destacar que se realizaron dos mediciones. Una el día mi\'ercoles a las 23:00 aproximadamente. La segunda medic\'on, tuvo lugar casi dos horas después, es decir, alrededor de las 1:00 de la madrugada del día jueves con el fin de realizar comparaciones entre los resultados obtenidos en horas muy similares y así poder hacer un análisis más completo.
+	
+	Posteriormente, se mostrará el desarrollo de los ejercicios número 2 y 3 propuestos en el enunciado de la tarea.
+	
+		\section{Desarrollo}
+			\subsection{Funcionamiento del transporte de paquetes}
+			Hoy en día, la mayoría de los datos que se mueven en Internet lo hacen mediante la conmutación de paquetes. Para ponerlo en ejemplos prácticos, se toma como ejemplo el envío de correos de un Cliente A un Cliente B en otro lado del mundo. En lugar de tener que abrir un circuito que va directamente a este lugar B y enviar el correo, este email es partido en diminutas piezas llamadas paquetes. Cada una de las piezas es etiquetada con el destino final que tiene y se permite que viaje de forma separada. En teoría, todos los paquetes viajan por rutas totalmente diferentes.
+
+	Cuando estos paquetes llegan al final de su viaje, todas las partes son re ensambladas para volver a formar el email de nuevo. La conmutación de paquetes es un sistema mucho más eficiente. No se tiene que tener una conexión permanente entre dos sitios que se están comunicando. Por lo tanto, no estás bloqueando una parte de la red cada vez que envías un mensaje. Mucha gente puede usar la red siempre cuando quiera, al poder ir los paquetes por diferentes rutas (dependiendo de lo saturadas que estén), la red se usa de un modo más equilibrado. Esto hace que la red se use de un modo más eficiente en general, y por tanto se gana en rapidez.
+
+En pasos muy abreviados, la forma en que se envían los datos desde que un usuario realiza la petición, son:\\
+
+\begin{itemize}
+
+	\item	1	Los datos son encapsulados por la capa de aplicación, que guarda la información de que programa está solicitando datos. Esto lo hace nuestro PC o cualquier dispositivo desde el cual se esté realizando la petición.\\
+	\item	2.	Luego, estos datos son encapsulados según el protocolo que se utilice, TCP o UDP, dependiendo de las necesidades y requisitos del programa. En este paquete, van también el puerto al que se va a pedir la conexión, además del orden en que están distribuidos los datos.\\
+	\item	3.	Estos datagramas se fragmentan en paquetes IP, que son los que serán repartidos por la red. Parten desde el router al cual estamos conectados, hasta el router del ISP. Aquí, router del ISP consulta la dirección IP de destino que lleva escrito el paquete enviado desde nuestro computador, y según unas tablas internas será redirigido a otro router. Este proceso será repetido varias veces, hasta alcanzar el destino requerido en el paquete. Dependiendo de la página solicitada, el número de saltos puede variar. Es importante decir que en el caso presentado a continuación, en el que se analizaron distintas páginas con el programa \textit{Open Visual Traceroute}, no se mostraron más allá de 8 o 10 re direccionamientos. Este procedimiento se hace de la misma forma, pero en sentido contrario para cargar la página solicitada.\\
+
+\end{itemize}
+
+Pongamos el ejemplo de un e-mail. Los datos son el mensaje en sí. Estos datos los encapsula tu aplicación de correo, ajustándolos a un protocolo de comunicación concreto para que el destinatario sepa cómo des-encapsular a su llegada. A este bloque se le añadirá una cabecera TCP (o UDP) que contiene la información de "por dónde tiene que entrar al destinatario" y que se encargará de que los paquetes IP se reciban re-ensamblen en orden. Esto es porque en el nivel L3 inferior todo esta capa de aplicación y transporte (TCP) se fragmenta en trozos (paquetes IP) que se envían independientemente y que llegan cada uno a su ritmo y quizá siguiendo rutas diferentes (aunque se envíen en orden pueden llegar desordenados. De hecho, este es uno de los problemas que se está dando ahora en Internet debido a que esta configuración funciona bien para navegación web y correo, por ejemplo, pero no para VoIP (Skype, Viber, etc.) ya que ahí sí que es crítico que un paquete tarde más de la cuenta (se notaría en la conversación). \\ \\ \\  
+
+			\subsection{Conexiones trans-oceánicas}
+
+	Hoy en día, la mayoría de las redes intercontinentales se realizan mediante conexiones de fibras ópticas submarinas. Existen otras tecnologías, como las conexiones satelitales, sin embargo, su capacidad para enviar, procesar y enviar la información se ve sobrepasada, dada la cantidad de transacciones realizadas hoy en día, por lo que esta tecnología es de un coste muy elevado y está destinada principalmente para usos científicos y militares de los satélites, casi todo su uso se reduce a unas pocas transmisiones en directo de televisión (vale decir, miles de conexiones diarias).
+
+	Como se mencionaba, la mayoría de las conexiones se realizan mediante cables de miles de kilómetros que cruzan todo el planeta y en todas direcciones, atravesando océanos a kilómetros bajo el nivel del mar para llevar la información por todo el mundo. Según datos obtenidos en la página \href{http://grownti.com/2011/11/05/mapa-interactivo-de-cableado-submarino-para-internet-2011/}{http://grownti.com/} del 2011, el 95\% de las conexiones se realizan mediante cables submarinos, como se muestra en el mapa a continuación.
+	 				\begin{center}  
+						\includegraphics[width=10cm]{trafico} 	
+					\end{center}	
+					  
+		Uno de los mayores problemas de esta solución, es que el agua marina es un elemento extremadamente corrosivo, y los cables de fibra óptica deben estar protegidos por siete capas de materiales protectores.
+
+	El procedimiento para la instalación de estos cables, es más simple de lo que podría imaginar, pues se hace con barcos que instalan miles de kilómetros de cable de fibra óptica dejándolos caer en el lecho marino. Tan simple como eso.
+   
+	 
+				 	\begin{center}
+						\includegraphics[width=10cm]{cables} 	
+					\end{center}	      
+ 
+	Otro de los problemas de este tipo de transmisión, es la perdida de la intensidad de las señales, y por lo tanto la perdida y retraso en el envío de los datos en el trayecto. Para solucionar esto, dentro de los cables van instalados repetidores, que tal como su nombre lo dice, retransmiten la información para que esta llegue integra a su destino.
+	 
+	Pero no todas las comunicaciones del mundo viajan mediante estos larguísimos cables. Tal como mencionamos más arriba, en caso de guerra se suele usar comunicación vía satélites. Lo mismo pasa en zonas muy aisladas geográficamente, como islas, barcos en medio del océano, montañas o en la selva, por ejemplo.
+   
+ 					\begin{center}
+						\includegraphics[width=8cm]{fibra} 	
+					\end{center}	   
+					
+	Por último, otro problema actual es que cada vez se necesita más ancho de banda, y por tanto más cables para transportar la creciente cantidad de datos. Hace algunas décadas se utilizaban cables de cobre. Ahora son de fibra óptica y dentro de algunos años habrá que cambiar de tecnología o instalar más cableado.
+
+	Una de las empresas que se dedica a la transmisión de datos por cables transoceánicos es la empre Level 3, con presencia en muchos países de Sudamérica y el caribe. En Chile, ingresaron comprando la empresa Global Crossing, que a su vez, compró anteriormente a Impsat. Aquí se muestra el mapa de sus conexiones en el mundo, imagen obtenida desde su página web
+
+					\begin{center}
+						\includegraphics[width=12cm]{redes} 	
+					\end{center}	
+
+			\clearpage 
+			\subsection{An\'alisis de los Dominios}
+				\begin{itemize} 
+
+
+					 \item{  http://moodle.inf.utfsm.cl}
+
+						Se observa que el tiempo de carga de la página fue casi el doble en el segundo intento. La cantidad de redirecciones es la misma. 
+						\begin{center}
+							\includegraphics[width=12cm]{redes1} 
+							\includegraphics[width=12cm]{redes21} 
+						\end{center}			
+
+					
+					
+					\clearpage 
+					 \item{ http://google.cl/}
+			
+					Se observa que el tiempo de carga es muy similar en ambos casos, sin embargo, en el segundo intento se hace un re direccionamiento más antes de llegar al pc que solicita la página. 
+					
+					\begin{center}
+						\includegraphics[width=12cm]{redes2} 
+						\includegraphics[width=12cm]{redes22} 
+					\end{center}	  
+
+
+				\clearpage 
+				\item{http://cime.cl/ }
+			
+					Aquí el segundo tiempo de carga es casi la mitad del primero. Además, en el primero, se realizó un re direccionamiento más, Las IP’s del principio y del final son las mismas, sin embargo existen pequeños cambios en los nodos interiores de la ruta. 
+					  
+					\begin{center}
+						\includegraphics[width=12cm]{redes3} 
+						\includegraphics[width=12cm]{redes23} 
+					\end{center}	
+
+				\clearpage 
+				\item{http://wikipedia.com/ }
+			
+					Aquí la cantidad de redirecciones realizadas es la misma. Además, los países a los cuales pertenecen estos nodos se mantienen, aunque en los nodos interiores, no se identifican los lugares específicos dentro de estos países. Los tiempos de espera fueron muy similares y el orden de los nodos en los cuales se re direccionan los paquetes son siempre los mismos. 
+
+					\begin{center}
+						\includegraphics[width=12cm]{redes4} 
+						\includegraphics[width=12cm]{redes24} 
+					\end{center}	
+ 
+  
+				\clearpage 
+				\item{http://www.chile.embassy.gov.au/}
+			
+					En esta última página, se obtuvieron distintos resultados en ambas mediciones, por lo que se decidió realizar una tercera, con tiempo infinito de búsqueda, pues en los dos primeros se obtuvieron distintos países para los nodos por los cuales pasaban los paquetes, además de que en ninguno de los dos anteriores casos, la búsqueda se lograba concretas antes del tiempo establecido. 
+				
+					En este tercer intento, tampoco se obtuvo una conexión exitosa para el programa, además de que apareció una nueva ruta para el envío de los paquetes, esta vez, mezclando los nodos de los dos intentos anteriores. Aquí no fue posible medir los tiempos de búsqueda y descarga de los paquetes. 
+				 
+					\begin{center}
+						\includegraphics[width=12cm]{redes5} 
+						\includegraphics[width=12cm]{redes25} 
+						\includegraphics[width=12cm]{redes35} 
+					\end{center}	
+ 
+		\end{itemize}
+		
+
+		\clearpage 
+		\section{Pregunta 2}
+  
+  		\subsection {Iteración 1:}
+
+		\begin{itemize} 
+   		
+		\begin{table}[h]
+			\begin{tabular}{|l|ccccccccc|}
+			\hline
+			- & A  & B & C & D & E & F & G & H & I  \\ \hline
+			A & 0  & 1 & - & - & - & - & 4 & - & 10 \\
+			B & 1  & 0 & 9 & - & 8 & - & - & - & -  \\
+			C & -  & 9 & 0 & 2 & - & - & - & - & -  \\
+			D & -  & - & 2 & 0 & 9 & 4 & - & - & 2  \\
+			E & -  & 8 & - & 9 & 0 & 2 & - & - & 1  \\
+			F & -  & - & - & 4 & 2 & 0 & - & 6 & -  \\
+			G & 4  & - & - & - & - & - & 0 & 7 & -  \\
+			H & -  & - & - & - & - & 6 & 7 & 0 & 3  \\
+			I & 10 & - & - & 2 & 1 & - & - & 3 & 0  \\ \hline
+			\end{tabular}
+		\end{table} 
+
+		\item Router A
+		\begin{table}[H]
+			\begin{tabular}{|l|ccccccccc|}
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & 0 & 1 & - & - & - & - & 4 & - & 10 \\
+			B & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router B
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			B & 1  & 0 & 9 & - & 8 & - & - & - & -  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router C
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & -  & 9 & 0 & 2 & - & - & - & - & -  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router D
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & -  & - & 2 & - & 9 & 4 & - & - & 2  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router E
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & -  & 8 & - & 9 & - & 2 & - & - & 1  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router F
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & -  & - & - & 4 & 2 & - & - & 6 & -  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router G
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & 4  & - & - & - & - & - & - & 7 & -  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router  H
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & -  & - & - & - & - & 6 & 7 & - & 3  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+		 
+		\item Router I
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+		   I & 10 & - & - & 2 & 1 & - & - & 3 & -  \\ \hline
+			\end{tabular}
+		\end{table}
+
+
+
+		\end{itemize} 
+ 
+
+	\subsection {Iteración 2:}
+
+
+   		
+		\begin{table}[H]
+			\begin{tabular}{|l|ccccccccc|}
+			\hline
+			- & A  & B  & C  & D  & E  & F  & G  & H  & I  \\ \hline
+			A & 0  & 1  & \cellcolor{green!25}10 & \cellcolor{green!25}12 & \cellcolor{green!25}9  & -  & 4  & \cellcolor{green!25}11 & 10 \\
+			B & 1  & 0  & 9  & \cellcolor{green!25}11 & 8  & \cellcolor{green!25}10 & \cellcolor{green!25}5  & -  & \cellcolor{green!25}9  \\
+			C & \cellcolor{green!25}10 & 9  & 0  & 2  &\cellcolor{green!25} 11 & \cellcolor{green!25}6  & -  & -  & \cellcolor{green!25}4  \\
+			D & \cellcolor{green!25}12 & \cellcolor{green!25}11 & 2  & 0  & \cellcolor{green!25}3  & 4  & -  & \cellcolor{green!25}5  & 2  \\
+			E & \cellcolor{green!25}9  & 8  &\cellcolor{green!25} 11 & \cellcolor{green!25}3  & 0  & 2  & -  & \cellcolor{green!25}4  & 1  \\
+			F & -  & \cellcolor{green!25}10 & \cellcolor{green!25}6  & 4  & 2  & 0  & \cellcolor{green!25}13 & 6  & \cellcolor{green!25}3  \\
+			G & 4  & \cellcolor{green!25}5  & -  & -  & -  & \cellcolor{green!25}13 & 0  & 7  &\cellcolor{green!25} 10  \\
+			H & \cellcolor{green!25}11 & -  & -  &\cellcolor{green!25} 5  & \cellcolor{green!25}4  & 6  & 7  & 0  & 3  \\
+			I & 10 & \cellcolor{green!25}9  & \cellcolor{green!25}4  & 2  & 1  & \cellcolor{green!25}3  & \cellcolor{green!25}10 & 3  & 0  \\ \hline
+			\end{tabular}
+		\end{table} 
+	
+
+
+\subsection {Iteración 3:}
+   		
+		\begin{table}[H]
+			\begin{tabular}{|l|ccccccccc|}
+			\hline
+			- & A  & B  & C  & D  & E  & F  & G  & H  & I  \\ \hline
+			A & 0  & 1  & 10 & 12 & 9  & \cellcolor{blue!25} 11 & 4  & 11 & 10 	\\
+			B & 1  & 0  & 9  & 11 & 8  & 10 & 5  & \cellcolor{blue!25} 12 & 9  \\
+			C & 10 & 9  & 0  & 2  & \cellcolor{blue!25} 5  & 6  & \cellcolor{blue!25}14 & \cellcolor{blue!25}7  & 4  \\
+			D & 12 & 11 & 2  & 0  & 3  & 4  & \cellcolor{blue!25}12 & 5  & 2  \\
+			E & 9  & 8  &\cellcolor{blue!25} 5  & 3  & 0  & 2  & \cellcolor{blue!25}11 & 4  & 1  \\
+			F & \cellcolor{blue!25}11 & 10 & 6  & 4  & 2  & 0  & 13 & 6  & 3  \\
+			G & 4  & 5  &\cellcolor{blue!25} 14 & \cellcolor{blue!25}12 &\cellcolor{blue!25} 11 & 13 & 0  & 7  & 10 \\
+			H & 11 & \cellcolor{blue!25}12 & \cellcolor{blue!25}7  & 5  & 4  & 6  & 7  & 0  & 3  \\
+			I & 10 & 9  & 4  & 2  & 1  & 3  & 10 & 3  & 0  \\ \hline
+			\end{tabular}
+		\end{table} 
+		
+		
+		
+		
+		
+		
+		
+		
+			\clearpage 
+		\section{Pregunta 3}
+			
+
+
+\subsection {Iteración 1:}
+
+		\begin{itemize} 
+   		
+		\begin{table}[h]
+				\begin{tabular}{|l|ccccccccc|}
+				\hline
+				- & A  & B & C & D & E & F & G & H & I  \\ \hline
+				A & 0  & 1 & - & - & - & - & 4 & - & 10 \\
+				B & 1  & 0 & 9 & - & 8 & - & - & - & -  \\
+				C & -  & 9 & 0 & 2 & - & - & - & - & -  \\
+				D & -  & - & 2 & 0 & 9 & 4 & - & - & 2  \\
+				E & -  & 8 & - & 9 & 0 & 2 & - & - & 1  \\
+				F & -  & - & - & 4 & 2 & 0 & - & 6 & -  \\
+				G & 4  & - & - & - & - & - & 0 & 7 & -  \\
+				H & -  & - & - & - & - & 6 & 7 & 0 & -  \\
+				I & 10 & - & - & 2 & 1 & - & - & - & 0  \\ \hline
+				\end{tabular}
+			\end{table} 
+
+		\item Router A
+		\begin{table}[H]
+			\begin{tabular}{|l|ccccccccc|}
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & 0 & 1 & - & - & - & - & 4 & - & 10 \\
+			B & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router B
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			B & 1  & 0 & 9 & - & 8 & - & - & - & -  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router C
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & -  & 9 & 0 & 2 & - & - & - & - & -  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router D
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & -  & - & 2 & - & 9 & 4 & - & - & 2  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router E
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & -  & 8 & - & 9 & - & 2 & - & - & 1  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router F
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & -  & - & - & 4 & 2 & - & - & 6 & -  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router G
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & 4  & - & - & - & - & - & - & 7 & -  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+
+		\item Router  H
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & -  & - & - & - & - & 6 & 7 & - & -  \\
+			I & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\ \hline
+			\end{tabular}
+		\end{table}
+		 
+		\item Router I
+		\begin{table}[H] 
+			\begin{tabular}{|l|ccccccccc|} 
+			\hline
+			- & A & B & C & D & E & F & G & H & I  \\ \hline
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			A & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			C & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$& $\infty$  \\
+			D & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			E & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			F & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			G & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+			H & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$ & $\infty$  \\
+		   I & 10 & - & - & 2 & 1 & - & - & - & -  \\ \hline
+			\end{tabular}
+		\end{table}
+
+
+
+		\end{itemize} 
+ 
+
+	\subsection {Iteración 2:}
+
+
+   		
+		\begin{table}[h]
+				\begin{tabular}{|l|ccccccccc|}
+				\hline
+				- & A  & B & C & D & E & F & G & H & I  \\ \hline
+				A & 0  & 1 & \cellcolor{green!25}10 & \cellcolor{green!25}12 & \cellcolor{green!25}9 & - & 4 & \cellcolor{green!25}11 & 10 \\
+				B & 1  & 0 & 9 & \cellcolor{green!25}11 & 8 &\cellcolor{green!25} 10 & \cellcolor{green!25}5 & - &\cellcolor{green!25} 9 \\
+				C & \cellcolor{green!25}10  & 9 & 0 & 2 & \cellcolor{green!25}11 &\cellcolor{green!25} 6 & - & - & \cellcolor{green!25}4  \\
+				D & \cellcolor{green!25}12  & \cellcolor{green!25}11 & 2 & 0 & \cellcolor{green!25}3 & 4 & - & \cellcolor{green!25}10 & 2  \\
+				E & \cellcolor{green!25}9  & 8 & \cellcolor{green!25}11 & \cellcolor{green!25}3 & 0 & 2 & - & \cellcolor{green!25}8 & 1  \\
+				F & -  & \cellcolor{green!25}10 & \cellcolor{green!25}6 & 4 & 2 & 0 & \cellcolor{green!25}13 & 6 & \cellcolor{green!25}3  \\
+				G & 4  & \cellcolor{green!25}5 & - & - & - & \cellcolor{green!25}13 & 0 & 7 & \cellcolor{green!25}14  \\
+				H & \cellcolor{green!25}11  & - & - & \cellcolor{green!25}10 & \cellcolor{green!25}8 & 6 & 7 & 0 & -  \\
+				I & 10 & \cellcolor{green!25}9 & \cellcolor{green!25}4 & 2 & 1 & \cellcolor{green!25}3 & \cellcolor{green!25}14 & - & 0  \\ \hline
+				\end{tabular}
+		\end{table} 	
+
+
+\subsection {Iteración 3:}
+
+		\begin{table}[h]
+				\begin{tabular}{|l|ccccccccc|}
+				\hline
+				- & A  & B  & C & D & E & F & G & H & I  \\ \hline
+				A & 0  & 1  & 10 & 12 & 8 & \cellcolor{blue!25} 11 & 4 & 11 & 10 \\
+				B & 1  & 0  & 9 & 11 & 8 & 10 & 5 & \cellcolor{blue!25} 12 & 9 \\
+				C & 10 & 9  & 0 & 2 & \cellcolor{blue!25} 5 & 6 & \cellcolor{blue!25} 14 & \cellcolor{blue!25} 12 & 4  \\
+				D & 12 & 11 & 2 & 0 & 3 & 4 & \cellcolor{blue!25} 16 & 10 & 2  \\
+				E & 9  & 8  & \cellcolor{blue!25} 5 & 3 & 0 & 2 & \cellcolor{blue!25} 13 & 8 & 1  \\
+				F & \cellcolor{blue!25} 11  & 10 & 6 & 4 & 2 & 0 & 13 & 6 & 3  \\
+				G & 4  & 5  & \cellcolor{blue!25} 14 & \cellcolor{blue!25} 16 & \cellcolor{blue!25} 13 & 13 & 0 & 7 & 14  \\
+				H & 11 & \cellcolor{blue!25} 12  & \cellcolor{blue!25} 12 & 10 & 8 & 6 & 7 & 0 &\cellcolor{blue!25}  9  \\
+				I & 10 & 9  & 4 & 2 & 1 & 3 & 14 & \cellcolor{blue!25} 9 & 0  \\ \hline
+				\end{tabular}
+		\end{table} 	
+
+
+
+		\clearpage 
+		\section{Referencias} 
+		
+		\begin{itemize}
+		
+		\item http://notebookypc.com/como-viaja-la-informacion-entre-continentes
+
+		\item http://dispositivos-moviles.com/conmutacion-de-paquetes/	
+
+		\item http://laneutralidaddered.blogspot.com/2011/07/como-funciona-internet.html
+
+		\item {http://grownti.com/2011/11/05/mapa-interactivo-de-cableado-submarino-para-internet-2011/}
+		
+		\end{itemize}
+		
+		\clearpage 
+		\section{Conclusión} 
+Se  pudo concluir de este trabajo, por qué en el programa Open Visual Traceroute aparecen distintos lugares por los cuales la páginas solicitadas (y cualquier otra obviamente) “pasan” antes de llegar a nuestro computador. Esto sucede porque todos los datos de la red se transportan por distintos nodos en todo el mundo con el fin de encontrar el camino más rápido en tiempo para llegar hasta el ordenador que los solicita. Este procedimiento se realiza para mantener regulada la congestión del núcleo de la red mundial de internet, y permitir que todos podamos tener acceso a ésta.
+Se rescata también lo sorpréndete de los avances tecnológicos que se han logrado para poder mantener interconectado a todo el mundo, y que aunque en esta época, todo lo que está a nuestro alcance, funciona o tiende a funcionar de manera inalámbrica, aún  el 95\% de la red pasa por cables físicos y no por satélites y otros medios más “modernos de transporte”. Aun así, esto representa un desafío, pues cada vez las necesidades de ancho de banda son cada vez más grandes y es necesario encontrar nuevas y mejores (económicas y logísticas) para llevas estos datos a todos los rincones del mundo, y por qué no, aún más allá.
+
+
+
+
+\end{document}
